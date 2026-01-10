@@ -1,3 +1,30 @@
+:root {
+  --brand-green: #A7DE4E;
+  --brand-cyan: #40DAE6;
+  --brand-orange: #FF5941;
+  --brand-indigo: #4143E1;
+
+  --bg: #F8FAFC;
+  /* fondo neutro */
+  --surface: #FFFFFF;
+  /* tarjetas */
+  --text: #0F172A;
+  /* texto principal */
+  --muted: #64748B;
+  /* texto secundario */
+  --border: #E2E8F0;
+  /* bordes */
+
+  --primary: #4143E1;
+  --secondary: #40DAE6;
+  --danger: #FF5941;
+  --success: #A7DE4E;
+
+  --muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+
 @import "tailwindcss";
 
 :root {
