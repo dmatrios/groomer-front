@@ -9,7 +9,7 @@ function readEnv(key: string): string | undefined {
 function requireEnv(key: string): string {
   const value = readEnv(key);
   if (!value) {
-    throw new Error(`[ENV] Falta la variable ${key}. Configúrala en .env.local (DEV) o en Vercel (PROD).`);
+    throw new Error(`[ENV] Falta la variable ${key}. Configúrala en Vercel (Production).`);
   }
   return value;
 }
@@ -21,7 +21,6 @@ export const ENV = {
     ? requireEnv("NEXT_PUBLIC_API_BASE_URL")
     : readEnv("NEXT_PUBLIC_API_BASE_URL") ?? "http://localhost:8080/api/v1",
 
-  // ✅ preferimos que sea explícito
   STATIC_BASE_URL: isProd
     ? requireEnv("NEXT_PUBLIC_STATIC_BASE_URL")
     : readEnv("NEXT_PUBLIC_STATIC_BASE_URL") ?? "http://localhost:8080",
