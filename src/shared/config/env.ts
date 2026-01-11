@@ -6,24 +6,39 @@ function readEnv(key: string): string | undefined {
   return value && value.length > 0 ? value : undefined;
 }
 
-function requireEnv(key: string): string {
-  const value = readEnv(key);
-  if (!value) {
-    throw new Error(`[ENV] Falta la variable ${key}. Configúrala en Vercel (Production).`);
-  }
-  return value;
-}
-
 const isProd = process.env.NODE_ENV === "production";
 
-export const ENV = {
-  API_BASE_URL: isProd
-    ? requireEnv("NEXT_PUBLIC_API_BASE_URL")
-    : readEnv("NEXT_PUBLIC_API_BASE_URL") ?? "http://localhost:8080/api/v1",
+/**
+ * IMPORTANTE:
+ * - En PROD: exigimos que existan (pero sin crashear al "import" en browser).
+ * - En DEV: defaults claros.
+ */
+function getPublicEnv(key: string, devDefault?: string): string {
+  const value = readEnv(key);
 
-  STATIC_BASE_URL: isProd
-    ? requireEnv("NEXT_PUBLIC_STATIC_BASE_URL")
-    : readEnv("NEXT_PUBLIC_STATIC_BASE_URL") ?? "http://localhost:8080",
+  // DEV: fallback cómodo
+  if (!isProd) return value ?? (devDefault ?? "");
+
+  // PROD: si falta, devolvemos "" (y lo validamos en runtime en el client)
+  return value ?? "";
+}
+
+export const ENV = {
+  API_BASE_URL: getPublicEnv(
+    "NEXT_PUBLIC_API_BASE_URL",
+    "http://localhost:8080/api/v1"
+  ),
+
+  STATIC_BASE_URL: getPublicEnv(
+    "NEXT_PUBLIC_STATIC_BASE_URL",
+    "http://localhost:8080"
+  ),
 
   AUTH_REQUIRED: (readEnv("NEXT_PUBLIC_AUTH_REQUIRED") ?? "true") === "true",
 } as const;
+
+// ✅ Validación "fail fast" solo cuando estamos en server (build/SSR)
+if (isProd && typeof window === "undefined") {
+  if (!ENV.API_BASE_URL) throw new Error("[ENV] Falta NEXT_PUBLIC_API_BASE_URL en Production.");
+  if (!ENV.STATIC_BASE_URL) throw new Error("[ENV] Falta NEXT_PUBLIC_STATIC_BASE_URL en Production.");
+}
