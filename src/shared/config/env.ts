@@ -9,36 +9,38 @@ function readEnv(key: string): string | undefined {
 const isProd = process.env.NODE_ENV === "production";
 
 /**
- * IMPORTANTE:
- * - En PROD: exigimos que existan (pero sin crashear al "import" en browser).
- * - En DEV: defaults claros.
+ * Env pública (NEXT_PUBLIC_*)
+ * - DEV: usa default (para evitar fricción local)
+ * - PROD: OBLIGATORIA (si falta, revienta con error claro)
+ *
+ * Motivo:
+ * Si en PROD falta, el front termina pegando a rutas relativas (tu dominio Vercel),
+ * y salen errores tipo 405/404 difíciles de rastrear.
  */
-function getPublicEnv(key: string, devDefault?: string): string {
+function requirePublicEnv(key: string, devDefault?: string): string {
   const value = readEnv(key);
 
-  // DEV: fallback cómodo
   if (!isProd) return value ?? (devDefault ?? "");
 
-  // PROD: si falta, devolvemos "" (y lo validamos en runtime en el client)
-  return value ?? "";
+  if (!value) {
+    throw new Error(
+      `[ENV] Falta la variable ${key} en Production (Vercel).`
+    );
+  }
+
+  return value;
 }
 
 export const ENV = {
-  API_BASE_URL: getPublicEnv(
+  API_BASE_URL: requirePublicEnv(
     "NEXT_PUBLIC_API_BASE_URL",
     "http://localhost:8080/api/v1"
   ),
 
-  STATIC_BASE_URL: getPublicEnv(
+  STATIC_BASE_URL: requirePublicEnv(
     "NEXT_PUBLIC_STATIC_BASE_URL",
     "http://localhost:8080"
   ),
 
   AUTH_REQUIRED: (readEnv("NEXT_PUBLIC_AUTH_REQUIRED") ?? "true") === "true",
 } as const;
-
-// ✅ Validación "fail fast" solo cuando estamos en server (build/SSR)
-if (isProd && typeof window === "undefined") {
-  if (!ENV.API_BASE_URL) throw new Error("[ENV] Falta NEXT_PUBLIC_API_BASE_URL en Production.");
-  if (!ENV.STATIC_BASE_URL) throw new Error("[ENV] Falta NEXT_PUBLIC_STATIC_BASE_URL en Production.");
-}
